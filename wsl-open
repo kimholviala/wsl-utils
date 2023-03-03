@@ -4,16 +4,26 @@
 ## Open a file or directory from WSL to graphical Windows
 ##
 
+#
+# Symlink this to ~/bin or /usr/local/bin using symlink
+# names 'open' (from macOS) and 'xdg-open' (Linux standard)
+#
+# $ ln -s wsl-open ~/bin/open/open
+# $ ln -s wsl-open ~/bin/open/xdg-open
+# $ open /usr/share/pixmaps/debian-logo.png
+# $ xdg-open ~
+#
+
 ARG="$1"
 
 # Check argument
 if [ ! "$ARG" ]; then
-	echo "Usage: `basename $0` <file or directory>" 1>&2
+	echo "Usage: `basename $0` <file or directory>" >&2
 	exit 1
 
 # Check file/directory existence
 elif [ ! -e "$ARG" ]; then
-	echo "Error: File or directory '$ARG' not found!" 1>&2
+	echo "Error: File or directory '$ARG' not found!" >&2
 	exit 1
 
 # Handle directories
