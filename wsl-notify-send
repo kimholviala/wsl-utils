@@ -3,29 +3,42 @@
 ##
 ## Send Windows native notification from WSL
 ##
-## Requires the binary from https://github.com/stuartleeks/wsl-notify-send
-##
-## Needs imagemagick and librsvg2-bin for icon conversion and
-## tango-icon-theme (or other icon themes) for stock icons
-##
 
-# Guesstimate the defaults
+#
+# Requires wsl-notify-send.exe from https://github.com/stuartleeks/wsl-notify-send
+# in the same directory as this script
+#
+# Kinda requires imagemagick, librsvg2-bin and tango-icon-theme (or other icon theme)
+# for icon conversion and stock icons, works without but just install them mmkay
+#
+# $ ln -s wsl-notify-send ~/bin/notify-send
+# $ notify-send -i terminal testings
+#
+# $ curl -o /tmp/leia.jpg https://static.wikia.nocookie.net/starwars/images/9/9b/Princessleiaheadwithgun.jpg/revision/latest
+# $ notify-send -i /tmp/leia.jpg -a "Princess Leia" -c "Urgent request" "Help me, Obi-Wan Kenobi. You're my only hope."
+#
+
+# Guesstimate defaults
 [ -f /etc/os-release ] && . /etc/os-release || NAME="$WSL_DISTRO_NAME"
 APPID="$NAME"
 CATEGORY="WSL notification"
 MESSAGE=""
 ICON="dialog-information"
 
+APP="wsl-notify-send"
+CMD="/mnt/c/Windows/system32/cmd.exe"
 EXE="`readlink -f $0`.exe"
-TEMP="`wslpath -u \`cmd.exe /C echo %TEMP%/wsl-notify-send.ico 2>/dev/null | tr '\\\\\' '/'\` | tr -d '\r\n'`"
+TEMP="`wslpath -u \`$CMD /C echo %TEMP% 2>/dev/null | tr '\\\\\' '/'\` | tr -d '\r\n'`"
 SIZE="256"
 
-# Cleanup on exit
-trap "rm -f \"$TEMP\"" EXIT
-
-# Make sure we guesstimated the location of exe correctly
+# Make sure the defaults are sane
 if [ ! -f "$EXE" ]; then
 	echo "$0: Could not find wsl-notify-send.exe from '$EXE'" >&2
+	exit 1
+fi
+
+if [ ! -d "$TEMP" ]; then
+	echo "$0: Could not determine Windows %TEMP% directory" >&2
 	exit 1
 fi
 
@@ -35,13 +48,15 @@ while [ $# -gt 0 ]; do
         -a) APPID="$2";    shift;;
         -c) CATEGORY="$2"; shift;;
         -i) ICON="$2";     shift;;
-	-u) [ "$2" = "critical" ] && ICON="dialog-error"; [ "$2" = "normal" ] && ICON="dialog-warning"; shift;;
+	-u) [ "$2" = "critical" ] && ICON="dialog-error";
+	    [ "$2" = "normal" ] && ICON="dialog-warning";
+	    shift;;
         *)  MESSAGE="$MESSAGE $1"
     esac
     shift
 done
 
-# We really want the message to send
+# We really need the message
 if [ ! "$MESSAGE" ]; then
 	echo "Usage: `basename $0` [-a <application>] [-c <category>] [-i <stock icon|file>] [-u (low|normal|critical)] <message>" >&2
 	exit 1
@@ -51,7 +66,7 @@ fi
 if [ "$ICON" -a "`which convert`" ]; then
 
 	if [ ! -f "$ICON" -a "`which rsvg-convert`" ]; then
-		SVG="`find /usr/share/icons -name \"$ICON.svg\" | head -1`"
+		SVG="`find /usr/share/icons -name \"\`basename $ICON\`.svg\" | head -1`"
 
 		if [ ! -f "$SVG" ]; then
 			echo "$0: Could not find stock icon '$ICON'" >&2
@@ -59,34 +74,38 @@ if [ "$ICON" -a "`which convert`" ]; then
 		fi
 
 		rsvg-convert -w "$SIZE" -h "$SIZE" "$SVG" -f png 2>/dev/null | \
-			convert -background transparent - "$TEMP" 2>/dev/null
+			convert -background transparent - "$TEMP/$APP.ico" 2>/dev/null
 
-		if [ ! -f "$TEMP" ]; then
-			echo "$0: Could not convert stock icon '$SVG' to '$TEMP'" >&2
+		if [ ! -f "$TEMP/$APP.ico" ]; then
+			echo "$0: Could not convert stock icon '$SVG' to '$TEMP/$APP.ico'" >&2
 			exit 1
 		fi
 	else
-		convert -background transparent "$ICON" -resize "${SIZE}x${SIZE}>" "$TEMP" 2>/dev/null
+		convert -background transparent "$ICON" -resize "${SIZE}x${SIZE}>" "$TEMP/$APP.ico" 2>/dev/null
 
-		if [ ! -f "$TEMP" ]; then
-			echo "$0: Could not convert image '$ICON' to '$TEMP'" >&2
+		if [ ! -f "$TEMP/$APP.ico" ]; then
+			echo "$0: Could not convert image '$ICON' to '$TEMP/$APP.ico'" >&2
 			exit 1
 		fi
 	fi
 
-	ICON="$TEMP"
+	ICON="$TEMP/$APP.ico"
 fi
 
-# Fallback icon
-if [ ! -f "$ICON" ]; then
-	ICON="`echo \"$EXE\" | sed 's/exe/ico/'`"
+# Convert icon location to Windows path
+if [ -f "$ICON" ]; then
+	ICON="`wslpath -m \"$ICON\"`"
+else
+	ICON=""
 fi
+
+# Copy exe to a Windows path where it works more reliably
+cp "$EXE" "$TEMP/$APP.exe" && EXE="$TEMP/$APP.exe"
 
 # Send Windows notification
 "$EXE" \
-	--icon "`wslpath -m \"$ICON\"`" \
+	--icon "$ICON" \
 	--appId "$APPID" \
 	--category "$CATEGORY" \
 	"$MESSAGE"
-
 
