@@ -4,6 +4,13 @@
 ## Generate resolv.conf using Windows DNS data
 ##
 
+#
+# Run this from cron every now and then to sync WSL resolv.conf with Windows
+# DNS settings.
+#
+# TODO: Only update when the Windows DNS settings actually change
+#
+
 POWERSHELL="/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe"
 RESOLVCONF="/etc/resolv.conf"
 
