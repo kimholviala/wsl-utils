@@ -1,0 +1,92 @@
+#!/bin/sh
+
+##
+## Send Windows native notification from WSL
+##
+## Requires the binary from https://github.com/stuartleeks/wsl-notify-send
+##
+## Needs imagemagick and librsvg2-bin for icon conversion and
+## tango-icon-theme (or other icon themes) for stock icons
+##
+
+# Guesstimate the defaults
+[ -f /etc/os-release ] && . /etc/os-release || NAME="$WSL_DISTRO_NAME"
+APPID="$NAME"
+CATEGORY="WSL notification"
+MESSAGE=""
+ICON="dialog-information"
+
+EXE="`readlink -f $0`.exe"
+TEMP="`wslpath -u \`cmd.exe /C echo %TEMP%/wsl-notify-send.ico 2>/dev/null | tr '\\\\\' '/'\` | tr -d '\r\n'`"
+SIZE="256"
+
+# Cleanup on exit
+trap "rm -f \"$TEMP\"" EXIT
+
+# Make sure we guesstimated the location of exe correctly
+if [ ! -f "$EXE" ]; then
+	echo "$0: Could not find wsl-notify-send.exe from '$EXE'" >&2
+	exit 1
+fi
+
+# Parse arguments
+while [ $# -gt 0 ]; do
+    case $1 in
+        -a) APPID="$2";    shift;;
+        -c) CATEGORY="$2"; shift;;
+        -i) ICON="$2";     shift;;
+	-u) [ "$2" = "critical" ] && ICON="dialog-error"; [ "$2" = "normal" ] && ICON="dialog-warning"; shift;;
+        *)  MESSAGE="$MESSAGE $1"
+    esac
+    shift
+done
+
+# We really want the message to send
+if [ ! "$MESSAGE" ]; then
+	echo "Usage: `basename $0` [-a <application>] [-c <category>] [-i <stock icon|file>] [-u (low|normal|critical)] <message>" >&2
+	exit 1
+fi
+
+# Convert Linux icon to Windows ico under %TEMP%
+if [ "$ICON" -a "`which convert`" ]; then
+
+	if [ ! -f "$ICON" -a "`which rsvg-convert`" ]; then
+		SVG="`find /usr/share/icons -name \"$ICON.svg\" | head -1`"
+
+		if [ ! -f "$SVG" ]; then
+			echo "$0: Could not find stock icon '$ICON'" >&2
+			exit 1
+		fi
+
+		rsvg-convert -w "$SIZE" -h "$SIZE" "$SVG" -f png 2>/dev/null | \
+			convert -background transparent - "$TEMP" 2>/dev/null
+
+		if [ ! -f "$TEMP" ]; then
+			echo "$0: Could not convert stock icon '$SVG' to '$TEMP'" >&2
+			exit 1
+		fi
+	else
+		convert -background transparent "$ICON" -resize "${SIZE}x${SIZE}>" "$TEMP" 2>/dev/null
+
+		if [ ! -f "$TEMP" ]; then
+			echo "$0: Could not convert image '$ICON' to '$TEMP'" >&2
+			exit 1
+		fi
+	fi
+
+	ICON="$TEMP"
+fi
+
+# Fallback icon
+if [ ! -f "$ICON" ]; then
+	ICON="`echo \"$EXE\" | sed 's/exe/ico/'`"
+fi
+
+# Send Windows notification
+"$EXE" \
+	--icon "`wslpath -m \"$ICON\"`" \
+	--appId "$APPID" \
+	--category "$CATEGORY" \
+	"$MESSAGE"
+
+

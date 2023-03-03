@@ -1,0 +1,27 @@
+#!/bin/sh
+
+##
+## Open a file or directory from WSL to graphical Windows
+##
+
+ARG="$1"
+
+# Check argument
+if [ ! "$ARG" ]; then
+	echo "Usage: `basename $0` <file or directory>" 1>&2
+	exit 1
+
+# Check file/directory existence
+elif [ ! -e "$ARG" ]; then
+	echo "Error: File or directory '$ARG' not found!" 1>&2
+	exit 1
+
+# Handle directories
+elif [ -d "$ARG" ]; then
+	cd "$ARG" && exec explorer.exe . 2>/dev/null &
+
+# Handle files
+else
+	exec cmd.exe /C "`wslpath -m \"$ARG\"`" 2>/dev/null &
+fi
+
