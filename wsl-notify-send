@@ -93,14 +93,11 @@ if [ "$ICON" -a "`which convert`" ]; then
 fi
 
 # Convert icon location to Windows path
-if [ -f "$ICON" ]; then
-	ICON="`wslpath -m \"$ICON\"`"
-else
-	ICON=""
-fi
+[ -f "$ICON" ] && ICON="`wslpath -m \"$ICON\"`" || ICON=""
 
 # Copy exe to a Windows path where it works more reliably
-cp "$EXE" "$TEMP/$APP.exe" && EXE="$TEMP/$APP.exe"
+[ -f "$TEMP/$APP.exe" ] || cp "$EXE" "$TEMP/$APP.exe"
+[ -f "$TEMP/$APP.exe" ] && EXE="$TEMP/$APP.exe"
 
 # Send Windows notification
 "$EXE" \
