@@ -1,0 +1,17 @@
+#!/bin/sh
+
+##
+## Start local X11 server
+##
+
+#
+# Requires the installation of VcXsrv from https://sourceforge.net/projects/vcxsrv/
+#
+
+DISPLAY=:0
+VCXSRV="/mnt/c/Program Files/VcXsrv/vcxsrv.exe"
+
+if [ -f "$VCXSRV" ]; then
+	nohup "$VCXSRV" -multiwindow -clipboard -wgl $DISPLAY >$HOME/.vcxsrv.log 2>&1 &
+fi
+
