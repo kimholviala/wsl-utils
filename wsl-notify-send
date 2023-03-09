@@ -11,7 +11,7 @@
 # Kinda requires imagemagick, librsvg2-bin and tango-icon-theme (or other icon theme)
 # for icon conversion and stock icons, works without but just install them mmkay
 #
-# $ ln -s wsl-notify-send ~/bin/notify-send
+# $ ln -s `pwd`/wsl-notify-send ~/bin/notify-send
 # $ notify-send -i terminal testings
 #
 # $ curl -o /tmp/leia.jpg https://static.wikia.nocookie.net/starwars/images/9/9b/Princessleiaheadwithgun.jpg/revision/latest

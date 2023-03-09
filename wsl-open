@@ -5,11 +5,11 @@
 ##
 
 #
-# Symlink this to ~/bin or /usr/local/bin using symlink
-# names 'open' (from macOS) and 'xdg-open' (Linux standard)
+# Symlink this to ~/bin/open (macOS) and ~/bin/xdg-open (Linux)
 #
-# $ ln -s wsl-open ~/bin/open/open
-# $ ln -s wsl-open ~/bin/open/xdg-open
+# $ ln -s `pwd`/wsl-open ~/bin/open
+# $ ln -s `pwd`/wsl-open ~/bin/xdg-open
+#
 # $ open /usr/share/pixmaps/debian-logo.png
 # $ xdg-open ~
 #

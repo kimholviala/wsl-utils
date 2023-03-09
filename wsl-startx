@@ -1,17 +1,35 @@
-#!/bin/sh
+#!/bin/bash
 
 ##
 ## Start local X11 server
 ##
 
 #
-# Requires the installation of VcXsrv from https://sourceforge.net/projects/vcxsrv/
+# Requires VcXsrv from https://sourceforge.net/projects/vcxsrv/
+#
+# $ ln -s `pwd`/wsl-startx ~/bin/startx
+# $ startx
 #
 
-DISPLAY=:0
+export DISPLAY=:0
 VCXSRV="/mnt/c/Program Files/VcXsrv/vcxsrv.exe"
+ARGS="-multiwindow -clipboard -wgl $DISPLAY"
 
-if [ -f "$VCXSRV" ]; then
-	nohup "$VCXSRV" -multiwindow -clipboard -wgl $DISPLAY >$HOME/.vcxsrv.log 2>&1 &
+LOG=~/.vcxsrv.log
+XINITRC=~/.xinitrc
+
+# Make sure VcXsrv is installed
+if [ ! -f "$VCXSRV" ]; then
+	echo "Could not find X11 server from '$VCXSRV'" >&2
+	exit 1
+fi
+
+# Launch the X11 server
+nohup "$VCXSRV" $ARGS "$@" >$LOG 2>&1 &
+
+# Launch optional X11 clients
+if [ -f "$XINITRC" ]; then
+	while ! grep -q "successfully opened the display" $LOG; do sleep 0.2; done
+	nohup /bin/sh $XINITRC >>$LOG 2>&1 &
 fi
 
