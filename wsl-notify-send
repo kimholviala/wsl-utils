@@ -44,16 +44,16 @@ fi
 
 # Parse arguments
 while [ $# -gt 0 ]; do
-    case $1 in
-        -a) APPID="$2";    shift;;
-        -c) CATEGORY="$2"; shift;;
-        -i) ICON="$2";     shift;;
-	-u) [ "$2" = "critical" ] && ICON="dialog-error";
-	    [ "$2" = "normal" ] && ICON="dialog-warning";
-	    shift;;
-        *)  MESSAGE="$MESSAGE $1"
-    esac
-    shift
+	case $1 in
+		-a) APPID="$2";    shift;;
+		-c) CATEGORY="$2"; shift;;
+		-i) ICON="$2";     shift;;
+		-u) [ "$2" = "critical" ] && ICON="dialog-error";
+		    [ "$2" = "normal" ] && ICON="dialog-warning";
+		    shift;;
+		*)  MESSAGE="$MESSAGE $1"
+	esac
+	shift
 done
 
 # We really need the message
