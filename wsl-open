@@ -21,6 +21,10 @@ if [ ! "$ARG" ]; then
 	echo "Usage: `basename $0` <file or directory>" >&2
 	exit 1
 
+# Handle URLs
+elif echo "$ARG" | egrep -q "^https?://"; then
+	exec cmd.exe /C "start $ARG" 2>/dev/null &
+
 # Check file/directory existence
 elif [ ! -e "$ARG" ]; then
 	echo "Error: File or directory '$ARG' not found!" >&2
