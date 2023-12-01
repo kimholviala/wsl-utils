@@ -5,7 +5,7 @@
 ##
 
 #
-# Symlink this to ~/bin/open (macOS) and ~/bin/xdg-open (Linux)
+# Symlink this to ~/bin/open and ~/bin/xdg-open
 #
 # $ ln -s `pwd`/wsl-open ~/bin/open
 # $ ln -s `pwd`/wsl-open ~/bin/xdg-open
@@ -13,6 +13,9 @@
 # $ open /usr/share/pixmaps/debian-logo.png
 # $ xdg-open ~
 #
+
+CMD="/mnt/c/Windows/system32/cmd.exe"
+EXPLORER="/mnt/c/Windows/explorer.exe"
 
 ARG="$1"
 
@@ -23,7 +26,7 @@ if [ ! "$ARG" ]; then
 
 # Handle URLs
 elif echo "$ARG" | egrep -q "^https?://"; then
-	exec cmd.exe /C "start $ARG" 2>/dev/null &
+	exec $CMD /C "start $ARG" 2>/dev/null &
 
 # Check file/directory existence
 elif [ ! -e "$ARG" ]; then
@@ -32,10 +35,10 @@ elif [ ! -e "$ARG" ]; then
 
 # Handle directories
 elif [ -d "$ARG" ]; then
-	cd "$ARG" && exec explorer.exe . 2>/dev/null &
+	cd "$ARG" && exec $EXPLORER . 2>/dev/null &
 
 # Handle files
 else
-	exec cmd.exe /C "`wslpath -m \"$ARG\"`" 2>/dev/null &
+	exec $CMD /C "`wslpath -m \"$ARG\"`" 2>/dev/null &
 fi
 
