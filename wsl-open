@@ -39,6 +39,9 @@ elif [ -d "$ARG" ]; then
 
 # Handle files
 else
-	exec $CMD /C "`wslpath -m \"$ARG\"`" 2>/dev/null &
-fi
+	DIR="`dirname \"$ARG\"`"
+	EXE="`basename \"$ARG\"`"
+	UNC="`wslpath -w \"$DIR\" | tr '\\134' '\\134\\134\\134\\134'`"
 
+	exec $CMD /C pushd "$UNC" \&\& ".\\$EXE" 2>/dev/null &
+fi
